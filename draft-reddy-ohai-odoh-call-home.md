@@ -81,7 +81,7 @@ oblivious DoH servers via a trusted relay.  Most importantly, it
 protects the oblivious DoH server from Layer 3 and Layer 4 DDoS
 attacks from the Internet.  However, the oblivious DoH server still
 needs to be protected from Layer 7 DDoS attacks from the clients
-authorized to connect via the Oblivious relay (see Section 8.3 of
+connecting via the Oblivious relay (see Section 8.3 of
 ({{!ORELAY-FEEDBACK=I-D.draft-rdb-ohai-feedback-to-proxy}})).
 
 # Conventions and Definitions
@@ -92,11 +92,10 @@ authorized to connect via the Oblivious relay (see Section 8.3 of
 
 The Oblvious DOH server initally acts as TCP/TLS client and the relay
 acts as TCP/TLS server and then roles are reversed. The Oblvious DOH
-server initiates  a secure connection to the relay, signals itself as an
+server initiates a secure connection to the relay, signals itself as an
 Oblivious target and triggers role reversal at the TLS layer.
 
-The Oblivious DoH server and the Oblivious target are configured with
-each other's certificates and FQDNs.
+The Oblivious DoH server is configured with the FQDNs of the relay. 
 
 The Oblivious DOH server would use the Application-Layer Protocol Negotiation (ALPN) token "ODoH" ({{iana}})
 in the TLS handshake to indicate to the relay that it supports this specification, and they
@@ -170,15 +169,16 @@ illustrated as follows for each of the relays:
 2. The gateway uses ALPN token "ODoH" in the TLS handshake to indicate to the relay that it is a target and not a client.
 
 3. The relay using the ALPN token "ODoH" would identify that the client is a gateway and sends the CertificateRequest message
-   to indicate that the certificate-based client authentication is required. The gateway sends the
-   client certificiate which will be validated by the relay.
+   to indicate that the certificate-based client authentication is required. The gateway sends the client certificiate 
+   which will be verified by the relay based on PKIX validation {{!RFC5280}}. The subjectAltName extension of type dNSName
+   in the client certificate will be used to record the identity of the gateway. 
 
 4. If the certificate validation is successful, role-reversal is triggered for the gateway to act as a server
    and the relay to act as client.
 
-5. If any client desires to use the target, the relay will use the prior-established secure connection
-   to forward the encapsulated requests from clients to the target and forwards the encapsulated responses from
-   the target to clients.
+5. If any client desires to use the gateway, the relay will use the prior-established secure connection
+   to forward the encapsulated requests from clients to the gateway and forwards the encapsulated responses from
+   the gateway to clients. 
 
 ## TCP Hearbeat Mechanism
 
