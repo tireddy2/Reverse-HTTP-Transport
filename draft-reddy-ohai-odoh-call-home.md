@@ -80,7 +80,7 @@ being publically accessible but allows the clients to access the
 oblivious DoH servers via a trusted relay.  Most importantly, it
 protects the oblivious DoH server from Layer 3 and Layer 4 DDoS
 attacks from the Internet.  However, the oblivious DoH server still
-needs to be protected from Layer 7 DDoS attacks from the clients
+needs to be protected from Layer 7 DDoS attacks from clients
 connecting via the Oblivious relay (see Section 8.3 of
 ({{!ORELAY-FEEDBACK=I-D.draft-rdb-ohai-feedback-to-proxy}})).
 
