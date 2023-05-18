@@ -191,8 +191,11 @@ The frequency of such keepalive and of timeouts is TBD.
 # Security Considerations {#security}
 
 The security considerations for the Oblivious HTTP protocol (Section 8 of {{OHTTP}}) as well as the security considerations for
-Discovery of Oblivious Services via Service Binding Records (Section 6 of {{OHAI-SVCB}}) apply.
-
+Discovery of Oblivious Services via Service Binding Records (Section 6 of {{OHAI-SVCB}}) apply. {{?CONSISTENCY=I-D.ietf-privacypass-key-consistency}} 
+provides an analysis of the options for ensuring the key configurations are consistent between different clients. Clients MUST employ 
+some technique to mitigate key targeting attacks. Note that option of confirming the key with a shared proxy as described in {{CONSISTENCY}} 
+will not work as the proxy will not be able to reach the Oblvious DOH server. In order to prevent the dohpath Targeting Attack discussed 
+in {{OHAI-SVCB}}, the dohpath value can be restricted to a single value, such as the commonly used "/dns-query{?dns}".
 
 
 # IANA Considerations {#iana}
