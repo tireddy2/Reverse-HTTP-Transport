@@ -90,12 +90,12 @@ connecting via the Oblivious relay (see Section 8.3 of
 
 # Solution Overview {#solution}
 
+The Oblivious DoH server is configured with the FQDNs of the relay. 
+
 The Oblvious DOH server initally acts as TCP/TLS client and the relay
 acts as TCP/TLS server and then roles are reversed. The Oblvious DOH
 server initiates a secure connection to the relay, signals itself as an
 Oblivious target and triggers role reversal at the TLS layer.
-
-The Oblivious DoH server is configured with the FQDNs of the relay. 
 
 The Oblivious DOH server would use the Application-Layer Protocol Negotiation (ALPN) token "ODoH" ({{iana}})
 in the TLS handshake to indicate to the relay that it supports this specification, and they
