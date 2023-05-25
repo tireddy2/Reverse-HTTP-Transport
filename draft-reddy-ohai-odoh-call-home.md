@@ -64,7 +64,7 @@ resources need to be located on the same host. In order for DoH servers to
 function as oblivious targets, their associated gateways need to be
 accessible via an oblivious relay. DoH servers used with the discovery mechanisms
 in {{OHAI-SVCB}} can either be publicly accessible, or specific to a network.
-In general, only publicly accessible DoH servers will work as oblivious
+As discussed in {{OHAI-SVCB}}, only publicly accessible DoH servers will work as oblivious
 targets, unless there is a coordinated deployment with an oblivious relay
 that is also hosted within a network. If the DoH resolver is only accessible to
 the devices attached to the network and is not publicly accessible, it cannot be
@@ -90,7 +90,7 @@ connecting via the Oblivious relay (see Section 8.3 of
 
 # Solution Overview {#solution}
 
-The DoOH server is configured with the FQDNs of the relay. 
+The DoOH server is configured with the FQDNs of the relays. 
 
 The DoOH server initally acts as TCP/TLS client and the relay
 acts as TCP/TLS server and then roles are reversed. The Oblvious DOH
