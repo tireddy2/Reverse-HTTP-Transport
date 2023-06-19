@@ -180,6 +180,10 @@ illustrated as follows for each of the relays:
    to forward the encapsulated requests from clients to the gateway and forwards the encapsulated responses from
    the gateway to clients. 
 
+TBD: An Alternative approach can be the gateway sends a HTTP request to the relay claiming that it is the gateway. The relay can 
+leverage the Post-Handshake Authentication extension defined in TLS 1.3 for the relay to authenticate the gateway to trigger the 
+role-reversal. After the role-reversal, the relay would act as client and the gateway acts as the server. 
+
 ## TCP Hearbeat Mechanism
 
 To accomodate loss of state in firewalls or translators especially in the absence
