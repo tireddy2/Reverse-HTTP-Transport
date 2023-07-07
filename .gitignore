@@ -17,7 +17,7 @@
 /versioned/
 Gemfile.lock
 archive.json
-draft-ietf-add-dns-error-page.xml
+draft-tiruben-reverse-http.xml
 package-lock.json
 report.xml
 !requirements.txt
