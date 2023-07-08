@@ -33,7 +33,7 @@ informative:
 
 --- abstract
 
-This document defines a secure transport for HTTP in which the client and server roles are reversed. This arrangement improves the origin server's protection from Layer 3 and Layer 4 DDoS attacks when an intermediary is in use.
+This document defines a secure transport for HTTP in which the client and server roles are reversed. This arrangement improves the origin server's protection from Layer 3 and Layer 4 DDoS attacks when an intermediary is in use. It allows origin server's to be hosted without being publicly accessible but allows the clients to access these servers via an intermediary.
 
 
 --- middle
@@ -44,18 +44,18 @@ The HTTP protocol has long supported the ability of clients to access origins vi
 
 * Client-selected
    - HTTP request proxies (a.k.a. forward proxies)
-   - Transport proxies (e.g., CONNECT, CONNECT-UDP)
-   - IP relays (e.g., CONNECT-IP)
-   - Oblivious HTTP Relays
+   - Transport proxies (e.g., CONNECT (see Section 9.3.6 of {{?RFC9110}}), CONNECT-UDP {{?RFC9298}})
+   - IP relays (e.g., CONNECT-IP {{?I-D.draft-ietf-masque-connect-ip}})
+   - Oblivious HTTP Relays {{?I-D.draft-ietf-ohai-ohttp}}
 * Origin-selected
    - HTTP gateways (a.k.a. reverse proxies)
    - Transport load balancers
 
 Although these intermediaries differ widely in their functionality, they all generally act as a client when connecting to the origin.  Client-selected intermediaries reach the origin based on its hostname or IP address specified in the HTTP request, while origin-selected intermediaries first translate this destination into a "backend address".
 
-One of the main advantages of origin-selected intermediaries is their ability to defend the origin from attacks, especially Denial of Service (DoS) attacks in which the attacker floods the origin server with requests or packets.  To prevent attackers from simply bypassing the intermediary, common practices include keeping the backend address secret and/or instituting firewall rules that only allow packets from the intermediary.  These practices are reasonably effective with origin-selected intermediaries, but they cannot be used with client-selected intermediaries, as those intermediaries do not know the secret backend address, and the origin does not know their "exit" IPs.
+One of the main advantages of origin-selected intermediaries is their ability to defend the origin from attacks, especially Denial of Service (DoS) attacks in which the attacker floods the origin server with requests or packets.  To prevent attackers from simply bypassing the intermediary, common practices include keeping the backend address secret and/or instituting firewall rules that only allow packets from the intermediary.  These practices are reasonably effective with origin-selected intermediaries, but they cannot be used with client-selected intermediaries, as those intermediaries do not know the secret backend address, and the origin does not know their "exit" IP addresses.
 
-This specification defines a protocol for HTTP connections between origins and arbitrary intermediaries that can limit the impact of DoS attacks.  When this protocol is in use, origins have the ability to partition the infrastructure that serves each intermediary so that attacks on the origin's public address, or via one intermediary, do not affect any other intermediaries.
+This specification defines a protocol for HTTP connections between origins and arbitrary intermediaries that can limit the impact of Layer 3 and Layer 4 DDoS attacks.  When this protocol is in use, origins have the ability to partition the infrastructure that serves each intermediary so that attacks on the origin's IP address via one intermediary do not affect any other intermediaries.
 
 This protocol works by reversing the TLS or QUIC transport that supports the HTTP connection: the origin acts as the transport client, and the intermediary acts as the server.  Inside the secure transport, HTTP operates normally, but with the client and server roles reversed.
 
@@ -67,12 +67,12 @@ This protocol works by reversing the TLS or QUIC transport that supports the HTT
 
 The new protocol is termed "Reverse HTTP".  The "Reverse HTTP/2" version is identified by the ALPN ID "h2-reverse", and "Reverse HTTP/3" by "h3-reverse" (see {{iana-alpn}} for registrations).  These protocols represent HTTP/2 and HTTP/3, operating with the roles reversed but otherwise unmodified, except as follows:
 
-* The intermediary MUST send a TLS CertificateRequest message.
+* The intermediary MUST send a TLS CertificateRequest message to indicate that certificate-based client authentication is required.
 * The origin MUST respond with a valid certificate chain.
 * Each party MUST send a SETTINGS frame as soon as the transport becomes writable to them.  This means that the intermediary will typically send its SETTINGS frame first.
 * The origin MUST immediately send an ORIGIN frame identifying the origins it claims.  This frame is used as originally defined, except that wildcard names are permitted (contrary to {{Section 2.2 of !RFC8336}}).
   - Otherwise, use of Reverse HTTP with wildcard certificates would be impossible.
-* The intermediary MUST check the ORIGIN frame contents against the provided TLS client certificates.
+* The intermediary MUST check the ORIGIN frame contents against the provided TLS client certificate.
 
 Reverse HTTP/1.1 is not defined, as the lack of multiplexing renders it unsuitable for this use.
 
@@ -179,13 +179,13 @@ Reverse HTTP is principally intended for use between intermediaries and origins.
 
 ## Stolen key attacks {#stolen-keys}
 
-As noted in {{Section 4 of !RFC8336}}, accepting ORIGIN frames without DNS confirmation facilitates the use of stolen keys, and thus increases the incentive to steal these keys.  The mitigations listed in that section also apply here, and are RECOMMENDED.  Intermediaries also MAY impose a DNS confirmation requirement, although this weakens the DoS defense provided by Reverse HTTP ({{ip-leaks}}).
+As noted in {{Section 4 of !RFC8336}}, accepting ORIGIN frames without DNS confirmation facilitates the use of stolen keys, and thus increases the incentive to steal these keys.  The mitigations listed in that section also apply here, and are RECOMMENDED.  Intermediaries also MAY impose a DNS confirmation requirement, although this weakens the DDoS defense provided by Reverse HTTP ({{ip-leaks}}).
 
 > QUESTION: Should we do more about this?  For example, we could define an OID to mark these certificates as Reverse HTTP-only, or we could commit to an IP range by placing a MAC in a DNS record and revealing the message via a SETTINGS value.
 
 ## IP leaks {#ip-leaks}
 
-One goal of Reverse HTTP is to prevent DoS attackers from learning the IP addresses used by the origin to communicate with this intermediary.  This address can leak in various ways, requiring certain mitigations:
+One goal of Reverse HTTP is to prevent DDoS attackers from learning the IP addresses used by the origin to communicate with this intermediary.  This IP address can be leaked in various ways, requiring certain mitigations:
 
 * In the ordinary DNS address records for the origin.
   - Origins SHOULD use different IPs for Reverse HTTP (unless the intermediary imposes a DNS confirmation requirement as described in {{stolen-keys}}).
@@ -198,7 +198,7 @@ One goal of Reverse HTTP is to prevent DoS attackers from learning the IP addres
 * From statistical analysis of traffic patterns.
   - Origins SHOULD regularly change the IP address that is used.
 
-Even if the origin's Reverse HTTP IP addresses do leak, Reverse HTTP still provides significant protection by simplifying the firewall rules required to ignore unsolicited connections.
+Even if the origin's Reverse HTTP IP addresses do leak, Reverse HTTP still provides significant protection by simplifying the firewall rules required to block unsolicited connections.
 
 ## Key consistency with Oblivious HTTP
 
