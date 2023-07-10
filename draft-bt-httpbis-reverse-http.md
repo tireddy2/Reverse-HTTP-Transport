@@ -34,14 +34,14 @@ informative:
 
 --- abstract
 
-This document defines a secure transport for HTTP in which the client and server roles are reversed. This arrangement improves the origin server's protection from Layer 3 and Layer 4 denial-of-service attacks when an intermediary is in use. It allows origin server's to be hosted without being publicly accessible but allows the clients to access these servers via an intermediary.
+This document defines a secure transport for HTTP in which the client and server roles are reversed. This arrangement improves the origin server's protection from Layer 3 and Layer 4 denial-of-service attacks when an intermediary is in use. It allows origin server's to be hosted without being publicly (and directly) accessible but allows clients to access these servers via an intermediary.
 
 
 --- middle
 
 # Introduction
 
-The HTTP protocol has long supported the ability of clients to access origins via an intermediary. There are now a variety of well-defined intermediary types:
+The Hypertext Transfer Protocol (HTTP) has long supported the ability of clients to access origins via an intermediary. There are a variety of well-defined intermediary types:
 
 * Client-selected
    - HTTP request proxies (a.k.a. forward proxies)
@@ -52,20 +52,20 @@ The HTTP protocol has long supported the ability of clients to access origins vi
    - HTTP gateways (a.k.a. reverse proxies)
    - Transport load balancers (e.g., Performance-Enhancing Proxies (PEPs, Section 2.1.1 of {{?RFC3135}})
 
-Although these intermediaries differ widely in their functionality, they all generally act as an HTTP client when connecting to the origin. Client-selected intermediaries reach the origin based on its hostname or IP address specified in the HTTP request, while origin-selected intermediaries first translate this destination address into a "backend address".
+Although these intermediaries differ widely in their functionality, many of them act as an HTTP client when connecting to the origin. Client-selected intermediaries reach the origin based on its hostname or IP address specified in the HTTP request, while origin-selected intermediaries first translate this destination address into a "backend address".
 
 One of the main advantages of origin-selected intermediaries is their ability to defend the origin from attacks, especially Denial of Service (DoS) and Distributed Denial-of-Service (DDoS) attacks in which an attacker floods the origin server with requests/packets.  To prevent attackers from simply bypassing the intermediary, common practices include keeping the backend address hidden and/or instituting filtering rules (ACL, typically) that only allow packets from the intermediary. These practices are reasonably effective with origin-selected intermediaries, but they cannot be used with client-selected intermediaries, as those intermediaries do not know the hidden backend IP address and/or port number, and the origin does not know their "exit" IP addresses.
 
 This specification defines a protocol for HTTP connections between origins and arbitrary intermediaries that can limit the impact of Layer 3 and Layer 4 DoS/DDoS attacks. When this protocol is in use, origins have the ability to partition the infrastructure that serves each intermediary. This ensures that attacks targeting the origin's public IP address 
 or attacks via one intermediary will not affect any other intermediaries. By partitioning the infrastructure, the impact of the attacks is contained within the affected intermediary or the origin's public IP address.
 
-This protocol works by reversing the roles of the Transport Layer Security (TLS) or QUIC transport that supports an HTTP connection: the origin acts as the transport client, and the intermediary acts as the server. Inside the secure transport, HTTP operates normally but with the client and server roles reversed.
+This protocol works by reversing the roles of the Transport Layer Security (TLS) or QUIC transport that supports an HTTP connection: the origin acts as the transport client, and the intermediary acts as the server. HTTP operates normally inside the secure transport but with the client and server roles reversed.
 
 # Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
 
-# Protocol {#protocol}
+# Reverse HTTP: Protocol Overview {#protocol}
 
 The protocol defined in this document is termed "Reverse HTTP".  The "Reverse HTTP/2" version is identified by the ALPN ID "h2-reverse", and "Reverse HTTP/3" by "h3-reverse" (see {{iana-alpn}}).  These protocols represent HTTP/2 and HTTP/3, operating with the roles reversed but otherwise unmodified, except as follows:
 
@@ -78,7 +78,8 @@ The protocol defined in this document is termed "Reverse HTTP".  The "Reverse HT
 
 Reverse HTTP/1.1 is not defined, as the lack of multiplexing renders it unsuitable for this use.
 
-Once this process has completed, the origin has proved ownership of the Origin Set and is ready to receive requests.  The intermediary SHOULD direct subsequent HTTP requests for this origin over this Reverse HTTP channel absent explicit policy (e.g., overload, ACL). For example, a policy can be provided to the intermediary to help determining unacceptable load threshold. 
+Once this process has completed, the origin has proved ownership of the Origin Set and is ready to receive requests.  The intermediary SHOULD direct subsequent HTTP requests for this origin over this Reverse HTTP channel absent explicit policy (e.g., overload limit or ACL). For example, a policy can be provided to the intermediary to help determining unacceptable load threshold.
+
 
 ~~~~~ aasvg
                                         .------------------------------.
