@@ -94,7 +94,7 @@ The HTTP "Via" header can indicate the presence of a client-selected intermediar
 
 # Service Binding Mapping {#svcb}
 
-Intermediaries that support Reverse HTTP SHOULD indicate this by publishing a SVCB record {{!I-D.ietf-dnsop-svcb-https}} with port-prefix naming, using the scheme "http-reverse" with a default port number of 443. Applicable SvcParamKeys include "alpn", "ipv4hint"/"ipv6hint", and "port". There is no default ALPN value, so the "alpn" key is REQUIRED.
+Intermediaries that support Reverse HTTP SHOULD indicate this by publishing a SVCB record {{!I-D.ietf-dnsop-svcb-https}} with port-prefix naming, using the scheme "http-reverse" with a default port number of 443. Applicable SvcParamKeys include "alpn", "ipv4hint"/"ipv6hint", "port", and "ech". There is no default ALPN value, so the "alpn" key is REQUIRED.
 
 ~~~ Zone
 proxy.example.net.               IN HTTPS 1 . alpn=h2,h3 ech=ABC..123
