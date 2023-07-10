@@ -41,7 +41,7 @@ This document defines a secure transport for HTTP in which the client and server
 
 # Introduction
 
-The HTTP has long supported the ability of clients to access origins via an intermediary. There are now a variety of well-defined intermediary types:
+The HTTP protocol has long supported the ability of clients to access origins via an intermediary. There are now a variety of well-defined intermediary types:
 
 * Client-selected
    - HTTP request proxies (a.k.a. forward proxies)
@@ -56,7 +56,7 @@ Although these intermediaries differ widely in their functionality, they all gen
 
 One of the main advantages of origin-selected intermediaries is their ability to defend the origin from attacks, especially Denial of Service (DoS) and Distributed Denial-of-Service (DDoS) attacks in which an attacker floods the origin server with requests/packets.  To prevent attackers from simply bypassing the intermediary, common practices include keeping the backend address hidden and/or instituting filtering rules (ACL, typically) that only allow packets from the intermediary. These practices are reasonably effective with origin-selected intermediaries, but they cannot be used with client-selected intermediaries, as those intermediaries do not know the secret backend address, and the origin does not know their "exit" IP addresses.
 
-This specification defines a protocol for HTTP connections between origins and arbitrary intermediaries that can limit the impact of Layer 3 and Layer 4 DoS attacks. When this protocol is in use, origins have the ability to partition the infrastructure that serves each intermediary. This ensures that attacks targeting the origin's public IP address 
+This specification defines a protocol for HTTP connections between origins and arbitrary intermediaries that can limit the impact of Layer 3 and Layer 4 DoS/DDoS attacks. When this protocol is in use, origins have the ability to partition the infrastructure that serves each intermediary. This ensures that attacks targeting the origin's public IP address 
 or attacks via one intermediary will not affect any other intermediaries. By partitioning the infrastructure, the impact of the attacks is contained within the affected intermediary or the origin's public IP address.
 
 
@@ -170,7 +170,7 @@ Origins backed by multiple servers MAY attempt to establish a separate Reverse H
 
 For very high-traffic origins and multi-instance intermediaries, a disruption could occur if the intermediary immediately directs all user traffic onto the first Reverse HTTP connection.  Very large intermediaries SHOULD ensure that transitions to Reverse HTTP are gradual, so that large origins have time to establish multiple connections.
 
-## Non-public Prigins
+## Non-public Origins
 
 In some cases, an HTTP origin may be intended exclusively for use via one or more client-selected intermediaries that are known to the origin.  In this situation, the publication of DNS records for the origin is OPTIONAL.
 
