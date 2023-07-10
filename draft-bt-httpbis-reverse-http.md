@@ -82,6 +82,58 @@ Reverse HTTP/1.1 is not defined, as the lack of multiplexing renders it unsuitab
 
 Once this process has completed, the origin has proved ownership of the Origin Set and is ready to receive requests.  The intermediary SHOULD direct subsequent HTTP requests for this origin over this Reverse HTTP channel absent explicit policy (e.g., overload limit or ACL). For example, a policy can be provided to the intermediary to help determining unacceptable load threshold.
 
+## Use with Transport Proxies
+
+Transport proxies do not normally act as HTTP clients, so they cannot use Reverse HTTP directly.  Instead, if a transport proxy receives a request whose destination host and port number appears in the Origin Set, the proxy establishes a transport proxy connection to this origin over the Reverse HTTP connection.  For example, this corresponds to an HTTP CONNECT request for TCP, and for UDP it corresponds to an extended-CONNECT request with the "connect-udp" protocol, using the registered .well-known URI template.
+
+Note that transport destinations identified by an IP address can only use this mechanism if the origin's certificate includes that IP address explicitly.
+
+For IP relays, the destination does not include a port number. By default, the intermediary MUST add a port number of 443 before attempting to forward packets using this procedure.
+
+## Discovery of Client-selected Intermediaries
+
+The HTTP "Via" header can indicate the presence of a client-selected intermediary.  If a "Via" header arrives with an unrecognized host, the origin MAY attempt a Reverse HTTP connection for use by future requests from this intermediary.  If the intermediary does not confirm the protocol via ALPN, the origin MUST close the connection.
+
+# Service Binding Mapping {#svcb}
+
+Intermediaries that support Reverse HTTP SHOULD indicate this by publishing a SVCB record {{!I-D.ietf-dnsop-svcb-https}} with port-prefix naming, using the scheme "http-reverse" with a default port number of 443. Applicable SvcParamKeys include "alpn", "ipv4hint"/"ipv6hint", and "port". There is no default ALPN value, so the "alpn" key is REQUIRED.
+
+~~~ Zone
+proxy.example.net.               IN HTTPS 1 . alpn=h2,h3 ech=ABC..123
+_http-reverse.proxy.example.net. IN SVCB  1 proxy.example.net. \
+      alpn=h2-reverse,h3-reverse ech=ABC..123
+~~~
+{: title="Example Records for a Forward Proxy that Supports Reverse HTTP"}
+
+# Operational Considerations
+
+## Efficiency
+
+Reverse HTTP does not use appreciably more bandwidth or CPU time than ordinary HTTP on active connections.  However, it is much less efficient for idle connections, which use memory and other connection-related resources on the intermediary even when no requests are being processed.
+
+## Connection Management
+
+To accommodate loss of state in firewalls or translators ({{Section 2 of ?RFC6269}}), especially in the absence
+of application traffic, the origin SHOULD use appropriate transport-level keepalives and MUST
+re-establish a new connection when an application-level communication has failed.
+
+Origins backed by multiple servers MAY attempt to establish a separate Reverse HTTP connection from each one in order to tolerate node failures and support optimized path selection. However, intermediaries SHOULD limit the number of idle Reverse HTTP connections operated on behalf of each registrable domain, in order to avoid resource exhaustion attacks. A local configuration may be provided to an intermediary to control the maximum number of active connections.
+
+For very high-traffic origins and multi-instance intermediaries, a disruption could occur if the intermediary immediately directs all user traffic onto the first Reverse HTTP connection.  Very large intermediaries SHOULD ensure that transitions to Reverse HTTP are gradual, so that large origins have time to establish multiple connections.
+
+> Note: define more what is meant precisly by "Very large", "multi-instance", etc.
+
+## Non-public Origins
+
+In some cases, an HTTP origin may be intended exclusively for use via one or more client-selected intermediaries that are known to the origin.  In this situation, the publication of DNS records outside a domain for the origin is OPTIONAL.
+
+## Other Applications
+
+Reverse HTTP is principally intended for use between intermediaries and origins.  It is not applicable to general HTTP clients, as it requires that the origin knows that the client will issue a request before the request occurs.  However, in cases where an HTTP client is publicly reachable and produces frequent requests to one origin over a long period of time, Reverse HTTP may be applicable. It is out of scope of this document to identify a comprehensive list of the protocol applicability.
+
+# An Example
+
+The following shows the example of the reverse HTTP in the context of Oblivious HTTP deployments.
 
 ~~~~~ aasvg
                                         .------------------------------.
@@ -132,55 +184,6 @@ Once this process has completed, the origin has proved ownership of the Origin S
      |                     |                    |              |
 ~~~~~
 {: title="Example: Reverse HTTP/2 for Oblivious HTTP"}
-
-## Use with Transport Proxies
-
-Transport proxies do not normally act as HTTP clients, so they cannot use Reverse HTTP directly.  Instead, if a transport proxy receives a request whose destination host and port number appears in the Origin Set, the proxy establishes a transport proxy connection to this origin over the Reverse HTTP connection.  For example, this corresponds to an HTTP CONNECT request for TCP, and for UDP it corresponds to an extended-CONNECT request with the "connect-udp" protocol, using the registered .well-known URI template.
-
-Note that transport destinations identified by an IP address can only use this mechanism if the origin's certificate includes that IP address explicitly.
-
-For IP relays, the destination does not include a port number. By default, the intermediary MUST add a port number of 443 before attempting to forward packets using this procedure.
-
-## Discovery of Client-selected Intermediaries
-
-The HTTP "Via" header can indicate the presence of a client-selected intermediary.  If a "Via" header arrives with an unrecognized host, the origin MAY attempt a Reverse HTTP connection for use by future requests from this intermediary.  If the intermediary does not confirm the protocol via ALPN, the origin MUST close the connection.
-
-# Service Binding Mapping {#svcb}
-
-Intermediaries that support Reverse HTTP SHOULD indicate this by publishing a SVCB record {{!I-D.ietf-dnsop-svcb-https}} with port-prefix naming, using the scheme "http-reverse" with a default port number of 443. Applicable SvcParamKeys include "alpn", "ipv4hint"/"ipv6hint", and "port". There is no default ALPN value, so the "alpn" key is REQUIRED.
-
-~~~ Zone
-proxy.example.net.               IN HTTPS 1 . alpn=h2,h3 ech=ABC..123
-_http-reverse.proxy.example.net. IN SVCB  1 proxy.example.net. \
-      alpn=h2-reverse,h3-reverse ech=ABC..123
-~~~
-{: title="Example Records for a Forward Proxy that Supports Reverse HTTP"}
-
-# Operational Considerations
-
-## Efficiency
-
-Reverse HTTP does not use appreciably more bandwidth or CPU time than ordinary HTTP on active connections.  However, it is much less efficient for idle connections, which use memory and other connection-related resources on the intermediary even when no requests are being processed.
-
-## Connection Management
-
-To accommodate loss of state in firewalls or translators ({{Section 2 of ?RFC6269}}), especially in the absence
-of application traffic, the origin SHOULD use appropriate transport-level keepalives and MUST
-re-establish a new connection when an application-level communication has failed.
-
-Origins backed by multiple servers MAY attempt to establish a separate Reverse HTTP connection from each one in order to tolerate node failures and support optimized path selection. However, intermediaries SHOULD limit the number of idle Reverse HTTP connections operated on behalf of each registrable domain, in order to avoid resource exhaustion attacks. A local configuration may be provided to an intermediary to control the maximum number of active connections.
-
-For very high-traffic origins and multi-instance intermediaries, a disruption could occur if the intermediary immediately directs all user traffic onto the first Reverse HTTP connection.  Very large intermediaries SHOULD ensure that transitions to Reverse HTTP are gradual, so that large origins have time to establish multiple connections.
-
-> Note: define more what is meant precisly by "Very large", "multi-instance", etc.
-
-## Non-public Origins
-
-In some cases, an HTTP origin may be intended exclusively for use via one or more client-selected intermediaries that are known to the origin.  In this situation, the publication of DNS records outside a domain for the origin is OPTIONAL.
-
-## Other Applications
-
-Reverse HTTP is principally intended for use between intermediaries and origins.  It is not applicable to general HTTP clients, as it requires that the origin knows that the client will issue a request before the request occurs.  However, in cases where an HTTP client is publicly reachable and produces frequent requests to one origin over a long period of time, Reverse HTTP may be applicable. It is out of scope of this document to identify a comprehensive list of the protocol applicability.
 
 # Security Considerations {#security}
 
