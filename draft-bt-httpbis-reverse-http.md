@@ -29,6 +29,10 @@ author:
     name: Mohamed Boucadair
     organization: Orange
     email: mohamed.boucadair@orange.com
+ -
+    name: Philipp S. Tiesel
+    organization: SAP SE
+    email: philipp@tiesel.net
 
 normative:
 
