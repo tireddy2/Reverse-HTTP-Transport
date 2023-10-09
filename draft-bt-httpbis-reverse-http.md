@@ -111,6 +111,10 @@ _http-reverse.proxy.example.net. IN SVCB  1 proxy.example.net. \
 
 # Operational Considerations
 
+## Compatibility
+
+Reverse HTTP applies to a single hop of a multihop HTTP connection, especially the hop between an intermediary and the origin.  When used in this way, Reverse HTTP is compatible with any ordinary HTTP user agent, and user agents ordinarily cannot tell that Reverse HTTP is in use.  (Reverse HTTP does not alter the contents of the "Via" response header.)
+
 ## Efficiency
 
 Reverse HTTP does not use appreciably more bandwidth or CPU time than ordinary HTTP on active connections.  However, it is much less efficient for idle connections, which use memory and other connection-related resources on the intermediary even when no requests are being processed.
